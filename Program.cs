@@ -41,7 +41,7 @@ while (now < _fiveMinutesFromNow)
         Console.WriteLine(elevatorTuple.Item2);
         Console.ResetColor();
     }
-    var nextRequestWaitTime = rand.Next(1000, 10000); // Random wait time between requests
+    var nextRequestWaitTime = rand.Next(1000, 2000); // Random wait time between requests
     await Task.Delay(nextRequestWaitTime);
     now = DateTime.Now;
     Console.Clear();

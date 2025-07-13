@@ -49,8 +49,9 @@ namespace ElevatorSystem.Services
 
         public void UnloadPassengers(int passengersUnloadedCount)
         {
-            if (passengersUnloadedCount > Occupants) Occupants = 0;
-            else Occupants -= passengersUnloadedCount;
+            //if (passengersUnloadedCount > Occupants) Occupants = 0;
+            //else Occupants -= passengersUnloadedCount;
+            Occupants = 0; // Unload all passengers 
         }
 
         public bool Move()
@@ -90,7 +91,7 @@ namespace ElevatorSystem.Services
                     int passengersToUnload = new Random().Next(1, Occupants + 1);
                     UnloadPassengers(passengersToUnload);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Elevator '{Id}' unloading '{passengersToUnload}' passenger(s) at floor {CurrentFloor}...");
+                    Console.WriteLine($"Elevator '{Id}' unloading passengers at floor {CurrentFloor}...");
                     Console.ResetColor();
                 }
                 else
