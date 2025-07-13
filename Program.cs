@@ -12,14 +12,15 @@ int floorCount = ElevatorHelper.GetUserNumberInput("Enter the number of floors i
 ElevatorSystem.Services.ElevatorSystem system =
     ElevatorHelper.ElevatorSystemSetup(elevatorCount, elevatorCapacity);
 
-//instead of asking the user for input, we can simulate the elevator system
-//for a certain number of iterations
-
 List<Task> elevatorSystemTasks = new List<Task>();
 
-System.Timers.Timer _timer = new System.Timers.Timer(2000); // 2 seconds
+System.Timers.Timer _timer = new System.Timers.Timer(3000); // 2 seconds
 _timer.Elapsed += new ElapsedEventHandler((sender, e) => MoveElevators(sender, e, system)); ;
 _timer.Start();
+
+System.Timers.Timer _statusTimer = new System.Timers.Timer(250); // 2 seconds
+_statusTimer.Elapsed += new ElapsedEventHandler((sender, e) => system.ShowStatus()); ;
+_statusTimer.Start();
 
 ConsoleKeyInfo cki;
 var now = DateTime.Now;
@@ -29,16 +30,31 @@ while (now < _fiveMinutesFromNow)
 {
     // Simulate a random request
     Random rand = new Random();
-    int floor = rand.Next(0, floorCount + 1);
-    int peopleCount = rand.Next(1, elevatorCapacity + 1);
+    int floor = rand.Next(0, floorCount + 5);
+    int peopleCount = rand.Next(1, elevatorCapacity + 5);
 
     var elevatorTuple = system.RequestElevator(new PersonRequest(floor, peopleCount));
-
-
-    var nextRequestWaitTime = rand.Next(1000, 5000); // Random wait time between requests
+    if (elevatorTuple.Item1 == null)
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.SetCursorPosition(0, Console.WindowHeight - elevatorTuple.Item2.Split("\n").Count() - 1);
+        Console.WriteLine(elevatorTuple.Item2);
+        Console.ResetColor();
+    }
+    var nextRequestWaitTime = rand.Next(1000, 10000); // Random wait time between requests
     await Task.Delay(nextRequestWaitTime);
     now = DateTime.Now;
+    Console.Clear();
+    Console.WriteLine("Welcome to the Elevator System\n");
+    Console.WriteLine($"Current Time: {now.ToShortTimeString()}");
+    Console.WriteLine($"Elevator Count: {elevatorCount}");
+    Console.WriteLine($"Elevator Capacity: {elevatorCapacity}");
+    Console.WriteLine($"Floor Count: {floorCount}");
 }
+// Wait for all elevator tasks to complete
+await Task.WhenAll(elevatorSystemTasks);
+_timer.Stop();
+
 
 void MoveElevators(
     object? sender,
@@ -46,16 +62,4 @@ void MoveElevators(
     ElevatorSystem.Services.ElevatorSystem system)
 {
     elevatorSystemTasks.Add(system.Step());
-}
-
-static void PrintLeft(string message)
-{
-    Console.SetCursorPosition(0, Console.GetCursorPosition().Top);
-    Console.WriteLine(message);
-}
-
-static void PrintRight(string message)
-{
-    Console.SetCursorPosition(Console.WindowWidth / 2, Console.GetCursorPosition().Top);
-    Console.WriteLine(message);
 }

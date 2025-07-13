@@ -26,14 +26,16 @@ namespace ElevatorSystem.Services
 
         public Tuple<Elevator?, string> RequestElevator(PersonRequest request)
         {
+            Console.SetCursorPosition(Console.WindowWidth / 2, 2);
             Console.WriteLine($"Requesting elevator for {request.PeopleCount} people on floor {request.Floor}.");
+            Console.SetCursorPosition(0, 0);
             StringBuilder sb = new StringBuilder();
             int i = 1;
             foreach (var elevator in _elevators.OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor)))
             {
                 if (elevator.Occupants + request.PeopleCount > elevator.Capacity)
                 {
-                    sb.AppendLine($"Elevator '{elevator.Id}' is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}\n");
+                    sb.AppendLine($"Elevator '{elevator.Id}' is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
                     Logger.LogInfo($"Elevator '{elevator.Id}' is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
                 }
                 i++;
@@ -49,7 +51,7 @@ namespace ElevatorSystem.Services
             {
                 foreach (var elevator in elevatorsWithCapacity)
                 {
-                    if (elevator.AddRequest(request.Floor))
+                    if (elevator.AddRequest(request.Floor, request.PeopleCount))
                     {
                         nearestAvailableElevator = elevator;
                         break;
@@ -64,10 +66,6 @@ namespace ElevatorSystem.Services
             var tasks = _elevators.Select(async elevator =>
             {
                 bool idle = await Task.Run(() => elevator.Move());
-                if (!idle)
-                {
-                    ShowStatus(); // Safe if ShowStatus is thread-safe
-                }
                 return !idle;
             });
 
@@ -75,18 +73,22 @@ namespace ElevatorSystem.Services
             return results.Any(moving => moving);
         }
 
-
         public void ShowStatus()
         {
             lock (_lock)
             {
-                //Console.Clear();
-                Console.WriteLine("*********************************************************");
+                Console.SetCursorPosition(0, 10);
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                StringBuilder sb = new StringBuilder("\n*********************************************\n");
                 foreach (var e in _elevators)
                 {
-                    Console.WriteLine($"Elevator '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
+                    sb.AppendLine($"Elevator '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
                 }
-                Console.WriteLine("*********************************************************\n");
+                sb.AppendLine("*********************************************\n");
+                var widht = Console.WindowWidth;
+
+                Console.WriteLine($"{sb.ToString()}         ");
+                Console.ResetColor();
             }
         }
     }
