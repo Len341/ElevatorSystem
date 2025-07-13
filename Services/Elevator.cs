@@ -25,15 +25,14 @@ namespace ElevatorSystem.Services
             Id = id;
         }
 
-        public void AddRequest(int floor)
+        public bool AddRequest(int floor)
         {
             if (!_floorRequests.Contains(floor))
-                _floorRequests.Enqueue(floor);
-            else
             {
-                Console.WriteLine($"Floor {floor} is already in the request queue for elevator '{Id}'.");
-                Logger.LogInfo($"Elevator {Id} added request for floor {floor}.");
+                _floorRequests.Enqueue(floor);
+                return true;
             }
+            return false; // Request already exists
         }
 
         public void LoadPassengers(int count)
@@ -43,8 +42,8 @@ namespace ElevatorSystem.Services
 
         public void UnloadPassengers(int passengersUnloadedCount)
         {
-            if (passengersUnloadedCount > Occupants) throw new ArgumentException("Passengers unloaded cannot be more than Occupants");
-            Occupants -= passengersUnloadedCount;
+            if (passengersUnloadedCount > Occupants) Occupants = 0;
+            else Occupants -= passengersUnloadedCount;
         }
 
         public bool Move()

@@ -12,6 +12,7 @@ namespace ElevatorSystem.Services
     public class ElevatorSystem
     {
         private readonly List<IElevator> _elevators;
+        private static readonly object _lock = new();
         public ElevatorSystem(int elevatorCount, int capacity)
         {
             if (elevatorCount > 100)
@@ -25,6 +26,7 @@ namespace ElevatorSystem.Services
 
         public Tuple<Elevator?, string> RequestElevator(PersonRequest request)
         {
+            Console.WriteLine($"Requesting elevator for {request.PeopleCount} people on floor {request.Floor}.");
             StringBuilder sb = new StringBuilder();
             int i = 1;
             foreach (var elevator in _elevators.OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor)))
@@ -37,34 +39,55 @@ namespace ElevatorSystem.Services
                 i++;
             }
 
-            var nearestElevatorWithCapacity = _elevators
+            var elevatorsWithCapacity = _elevators
                 .Where(e => e.Occupants + request.PeopleCount <= e.Capacity)
-                .OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor))
-                .FirstOrDefault();
+                .OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor));
 
-            if (nearestElevatorWithCapacity != null)
+            IElevator nearestAvailableElevator = null;
+
+            if (elevatorsWithCapacity != null && elevatorsWithCapacity.Any())
             {
-                nearestElevatorWithCapacity.AddRequest(request.Floor);
+                foreach (var elevator in elevatorsWithCapacity)
+                {
+                    if (elevator.AddRequest(request.Floor))
+                    {
+                        nearestAvailableElevator = elevator;
+                        break;
+                    }
+                }
             }
-            return Tuple.Create((Elevator?)nearestElevatorWithCapacity, sb.ToString());
+            return Tuple.Create((Elevator?)nearestAvailableElevator, sb.ToString());
         }
 
-        public void Step()
+        public async Task<bool> Step()
         {
-            foreach (var elevator in _elevators)
+            var tasks = _elevators.Select(async elevator =>
             {
-                elevator.Move();
-            }
+                bool idle = await Task.Run(() => elevator.Move());
+                if (!idle)
+                {
+                    ShowStatus(); // Safe if ShowStatus is thread-safe
+                }
+                return !idle;
+            });
+
+            var results = await Task.WhenAll(tasks);
+            return results.Any(moving => moving);
         }
+
 
         public void ShowStatus()
         {
-            Console.WriteLine("*********************************************************");
-            foreach (var e in _elevators)
+            lock (_lock)
             {
-                Console.WriteLine($"Elevator '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
+                //Console.Clear();
+                Console.WriteLine("*********************************************************");
+                foreach (var e in _elevators)
+                {
+                    Console.WriteLine($"Elevator '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
+                }
+                Console.WriteLine("*********************************************************\n");
             }
-            Console.WriteLine("*********************************************************\n");
         }
     }
 }

@@ -9,61 +9,31 @@ namespace ElevatorSystem.Utils
 {
     public static class ElevatorHelper
     {
-        public static int GetElevatorCapacityFromUser()
+        public static int GetUserNumberInput(string prompt)
         {
-            int capacity;
             while (true)
             {
                 try
                 {
-                    capacity = Console.ReadLine() switch
+                    Console.WriteLine(prompt);
+                    _ = int.TryParse(Console.ReadLine() ?? string.Empty, out int res);
+                    if (res <= 0)
                     {
-                        string s when int.TryParse(s, out int cap) && cap > 0 => cap,
-                        _ => throw new ArgumentException("Please enter a valid positive integer.")
-                    };
+                        throw new ArgumentException("Please enter a valid positive integer.");
+                    }
+                    return res;
                 }
-                catch (ArgumentException ex)
+                catch (ArgumentException argEx)
                 {
-                    Console.WriteLine(ex.Message);
-                    Logger.LogError("Invalid elevator capacity input.");
+                    Console.WriteLine($"An error occurred: {argEx.Message}");
+                    Logger.LogError("Invalid user input for number.");
                     continue;
                 }
-                break;
             }
-            return capacity;
         }
-        public static int GetElevatorsCountFromUser()
-        {
-            int elevatorCount;
-            while (true)
-            {
-                try
-                {
-                    elevatorCount = Console.ReadLine() switch
-                    {
-                        string s when int.TryParse(s, out int count) && count > 0 => count,
-                        _ => throw new ArgumentException("Please enter a valid positive integer.")
-                    };
-                }
-                catch (ArgumentException ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    Logger.LogError("Invalid elevator count input.");
-                    continue;
-                }
-                break;
-            }
-
-            return elevatorCount;
-        }
-        public static void ElevatorSetupInput(out int elevatorCount, out int elevatorCapacity)
-        {
-            Console.WriteLine("How many elevators are there ?");
-            elevatorCount = GetElevatorsCountFromUser();
-            Console.WriteLine("How many people can each elevator carry ?");
-            elevatorCapacity = GetElevatorCapacityFromUser();
-        }
-        public static ElevatorSystem.Services.ElevatorSystem ElevatorSystemSetup(ref int elevatorCount, ref int elevatorCapacity)
+        public static ElevatorSystem.Services.ElevatorSystem ElevatorSystemSetup(
+            int elevatorCount, 
+            int elevatorCapacity)
         {
             ElevatorSystem.Services.ElevatorSystem system;
             while (true)
@@ -76,7 +46,8 @@ namespace ElevatorSystem.Utils
                 {
                     Console.WriteLine($"An error occurred: {ex.Message}");
                     Console.WriteLine("Please try again.\n\n");
-                    ElevatorSetupInput(out elevatorCount, out elevatorCapacity);
+                    elevatorCount = GetUserNumberInput("Enter the number of elevators:");
+                    elevatorCapacity = GetUserNumberInput("Enter the capacity of each elevator:");
                     Logger.LogError("Failed to create ElevatorSystem with the provided parameters.");
                     continue;
                 }

@@ -5,7 +5,7 @@ namespace ElevatorSystem.Interfaces
     public interface IElevator
     {
         bool Move();
-        void AddRequest(int floor);
+        bool AddRequest(int floor);
         int Id { get; }
         int CurrentFloor { get; }
         Direction Direction { get; }
