@@ -22,9 +22,14 @@ namespace ElevatorSystem.Services
 
             var ids = Enumerable.Range(1, elevatorCount).Select(i => i).ToList();
             _elevators = ids.Select(id => new ElevatorBase(id, capacity)).Cast<IElevator>().ToList();
+
+            //add two old elevators and one glass elevator
+            _elevators.Add(new OldElevator(101, capacity));
+            _elevators.Add(new OldElevator(102, capacity));
+            _elevators.Add(new GlassElevator(103, capacity));
         }
 
-        public Tuple<ElevatorBase?, string> RequestElevator(PersonRequest request)
+        public Tuple<IElevator?, string> RequestElevator(PersonRequest request)
         {
             Console.SetCursorPosition(Console.WindowWidth / 2, 2);
             GeneralHelper.WriteLine($"Requesting elevator for {request.PeopleCount} people on floor {request.Floor}.");
@@ -58,7 +63,7 @@ namespace ElevatorSystem.Services
                     }
                 }
             }
-            return Tuple.Create((ElevatorBase?)nearestAvailableElevator, sb.ToString());
+            return Tuple.Create(nearestAvailableElevator, sb.ToString());
         }
 
         public async Task<bool> Step()

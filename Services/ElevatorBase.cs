@@ -25,6 +25,11 @@ namespace ElevatorSystem.Services
             Id = id;
         }
 
+        public override string ToString()
+        {
+            return "Base Elevator";
+        }
+
         public bool AddRequest(int floor, int people)
         {
             if (!_floorRequests.Any(z => z.Item1 == floor))
@@ -55,9 +60,10 @@ namespace ElevatorSystem.Services
             Occupants = 0; // Unload all passengers 
         }
 
-        public bool Move()
+        public virtual bool Move()
         {
             //return a bool determining if the elevator is still moving or destination reached
+
             if (_floorRequests.Count == 0)
             {
                 Direction = Direction.Idle;

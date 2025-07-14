@@ -5,12 +5,14 @@ using System.Timers;
 
 GeneralHelper.WriteLine("Welcome to the Elevator System\n");
 
-int elevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of elevators:");
+int normalElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of normal elevators:");
+int glassElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of glass elevators:");
+int oldElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of old elevators:");
 int elevatorCapacity = ElevatorHelper.GetUserNumberInput("Enter the capacity of each elevator:");
 int floorCount = ElevatorHelper.GetUserNumberInput("Enter the number of floors in the building:");
 
 ElevatorSystem.Services.ElevatorSystem system =
-    ElevatorHelper.ElevatorSystemSetup(elevatorCount, elevatorCapacity);
+    ElevatorHelper.ElevatorSystemSetup(normalElevatorCount, elevatorCapacity);
 
 List<Task> elevatorSystemTasks = new List<Task>();
 
@@ -47,7 +49,7 @@ while (now < _fiveMinutesFromNow)
     Console.Clear();
     GeneralHelper.WriteLine("Welcome to the Elevator System\n");
     GeneralHelper.WriteLine($"Current Time: {now.ToShortTimeString()}");
-    GeneralHelper.WriteLine($"Elevator Count: {elevatorCount}");
+    GeneralHelper.WriteLine($"Elevator Count: {normalElevatorCount}");
     GeneralHelper.WriteLine($"Elevator Capacity: {elevatorCapacity}");
     GeneralHelper.WriteLine($"Floor Count: {floorCount}");
 }
