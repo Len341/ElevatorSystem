@@ -16,7 +16,7 @@ namespace ElevatorSystem.Services
         public Direction Direction { get; private set; } = Direction.Idle;
         public int Capacity { get; }
         public int Occupants { get; private set; }
-
+        public bool IsAvailable => Direction == Direction.Idle && _floorRequests.Count == 0;
         public int Id { get; private set; }
 
         public ElevatorBase(int id, int capacity)
@@ -27,7 +27,7 @@ namespace ElevatorSystem.Services
 
         public override string ToString()
         {
-            return "Base Elevator";
+            return $"Base Elevator with ID '{Id}'";
         }
 
         public bool AddRequest(int floor, int people)
@@ -46,10 +46,8 @@ namespace ElevatorSystem.Services
             Occupants = Math.Min(Capacity, Occupants + count);
             int passengerCountLoaded = Occupants - _occupants;
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.SetCursorPosition(Console.WindowWidth / 2, 3);
             GeneralHelper.WriteLine(
-                $"Elevator '{Id}' loading '{passengerCountLoaded}' passenger(s) at floor {CurrentFloor}...");
-            Console.SetCursorPosition(0, 0);
+                $"{ToString()} loading '{passengerCountLoaded}' passenger(s) at floor {CurrentFloor}...");
             Console.ResetColor();
         }
 
@@ -72,40 +70,41 @@ namespace ElevatorSystem.Services
             var floorRequest = _floorRequests.Peek();
             var targetFloor = floorRequest.Item1;
             var peopleCount = floorRequest.Item2;
-
+            if (this is IGlassElevator)
+            {
+                ((IGlassElevator)this).PrintView();
+            }
             if (targetFloor > CurrentFloor)
             {
                 CurrentFloor++;
                 Direction = Direction.Up;
-                Logger.LogInfo($"Elevator {Id} moving up to floor {CurrentFloor}...");
+                Logger.LogInfo($"{ToString()} moving up to floor {CurrentFloor}...");
                 return false; // Still moving
             }
             else if (targetFloor < CurrentFloor)
             {
                 CurrentFloor--;
                 Direction = Direction.Down;
-                Logger.LogInfo($"Elevator {Id} moving down to floor {CurrentFloor}...");
+                Logger.LogInfo($"{ToString()} moving down to floor {CurrentFloor}...");
                 return false; // Still moving
             }
             else
             {
                 // Reached the target floor, unload passengers
                 _floorRequests.Dequeue();
-                Console.SetCursorPosition(Console.WindowWidth / 2, 3);
                 if (Occupants > 0)
                 {
                     //passengersUnloadedCount = ElevatorHelper.GetPassengerUnloadCount(passengersUnloadedCount, Occupants);
                     int passengersToUnload = new Random().Next(1, Occupants + 1);
                     UnloadPassengers(passengersToUnload);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    GeneralHelper.WriteLine($"Elevator '{Id}' unloading passengers at floor {CurrentFloor}...");
+                    GeneralHelper.WriteLine($"{ToString()} unloading passengers at floor {CurrentFloor}...");
                     Console.ResetColor();
                 }
                 else
                 {
-                    GeneralHelper.WriteLine($"Elevator '{Id}' arrived at floor {CurrentFloor} with no occupants.");
+                    GeneralHelper.WriteLine($"{ToString()} arrived at floor {CurrentFloor} with no occupants.");
                 }
-                Console.SetCursorPosition(0, 0);
                 LoadPassengers(peopleCount);
                 Direction = _floorRequests.Count > 0 ? Direction : Direction.Idle;
                 return true; // Destination reached

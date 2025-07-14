@@ -22,13 +22,13 @@ namespace ElevatorSystem.Services
         public void PrintView()
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.SetCursorPosition(Console.WindowWidth / 2, 6);
             GeneralHelper.WriteLine(_viewDescription);
+            Logger.LogInfo(_viewDescription);
             Console.ResetColor();
         }
         public override string ToString()
         {
-            return "Glass Elevator";
+            return $"Glass Elevator with ID '{Id}'";
         }
     }
 }

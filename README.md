@@ -1,7 +1,7 @@
 # ElevatorSystem
 
 # ElevatorSystem is a C# project that simulates an elevator system with multiple elevators and floors.
-# It allows users to request elevators, move them between floors, and view their states.
+# It allows users to request elevators, move them between floors, and view their states. (This is currently running as an automatic simulation without user input)
 # The project is designed to demonstrate object-oriented programming principles and design patterns.
 # The system includes error handling, logging, and unit tests to ensure reliability and maintainability.
 

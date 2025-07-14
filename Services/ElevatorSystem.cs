@@ -31,30 +31,33 @@ namespace ElevatorSystem.Services
 
         public Tuple<IElevator?, string> RequestElevator(PersonRequest request)
         {
-            Console.SetCursorPosition(Console.WindowWidth / 2, 2);
             GeneralHelper.WriteLine($"Requesting elevator for {request.PeopleCount} people on floor {request.Floor}.");
-            Console.SetCursorPosition(0, 0);
             StringBuilder sb = new StringBuilder();
             int i = 1;
             foreach (var elevator in _elevators.OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor)))
             {
-                if (elevator.Occupants + request.PeopleCount > elevator.Capacity)
+                if (elevator.Occupants + request.PeopleCount > elevator.Capacity && elevator.IsAvailable)
                 {
-                    sb.AppendLine($"Elevator '{elevator.Id}' is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
-                    Logger.LogInfo($"Elevator '{elevator.Id}' is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
+                    sb.AppendLine($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
+                    Logger.LogInfo($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
+                }
+                else if (!elevator.IsAvailable)
+                {
+                    sb.AppendLine($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but is not available.");
+                    Logger.LogInfo($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but is not available.");
                 }
                 i++;
             }
 
-            var elevatorsWithCapacity = _elevators
-                .Where(e => e.Occupants + request.PeopleCount <= e.Capacity)
+            var elevatorsWithCapacityAndAvailability = _elevators
+                .Where(e => e.Occupants + request.PeopleCount <= e.Capacity && e.IsAvailable)
                 .OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor));
 
             IElevator nearestAvailableElevator = null;
 
-            if (elevatorsWithCapacity != null && elevatorsWithCapacity.Any())
+            if (elevatorsWithCapacityAndAvailability != null && elevatorsWithCapacityAndAvailability.Any())
             {
-                foreach (var elevator in elevatorsWithCapacity)
+                foreach (var elevator in elevatorsWithCapacityAndAvailability)
                 {
                     if (elevator.AddRequest(request.Floor, request.PeopleCount))
                     {
@@ -82,17 +85,14 @@ namespace ElevatorSystem.Services
         {
             lock (_lock)
             {
-                Console.SetCursorPosition(0, 10);
                 Console.ForegroundColor = ConsoleColor.DarkYellow;
                 StringBuilder sb = new StringBuilder("\n*********************************************\n");
                 foreach (var e in _elevators)
                 {
-                    sb.AppendLine($"Elevator '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
+                    sb.AppendLine($"{e.ToString()} '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
                 }
                 sb.AppendLine("*********************************************\n");
-                var widht = Console.WindowWidth;
-
-                GeneralHelper.WriteLine($"{sb.ToString()}         ");
+                GeneralHelper.WriteLine($"{sb.ToString()}");
                 Console.ResetColor();
             }
         }

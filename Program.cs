@@ -5,9 +5,7 @@ using System.Timers;
 
 GeneralHelper.WriteLine("Welcome to the Elevator System\n");
 
-int normalElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of normal elevators:");
-int glassElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of glass elevators:");
-int oldElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of old elevators:");
+int normalElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of elevators:");
 int elevatorCapacity = ElevatorHelper.GetUserNumberInput("Enter the capacity of each elevator:");
 int floorCount = ElevatorHelper.GetUserNumberInput("Enter the number of floors in the building:");
 
@@ -39,7 +37,6 @@ while (now < _fiveMinutesFromNow)
     if (elevatorTuple.Item1 == null)
     {
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.SetCursorPosition(0, Console.WindowHeight - elevatorTuple.Item2.Split("\n").Count() - 1);
         GeneralHelper.WriteLine(elevatorTuple.Item2);
         Console.ResetColor();
     }

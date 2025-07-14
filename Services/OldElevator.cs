@@ -22,7 +22,7 @@ namespace ElevatorSystem.Services
         }
         public override string ToString()
         {
-            return "Old Elevator";
+            return $"Old Elevator with ID '{Id}'";
         }
     }
 }
