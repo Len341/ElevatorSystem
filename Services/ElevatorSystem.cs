@@ -89,7 +89,7 @@ namespace ElevatorSystem.Services
                 StringBuilder sb = new StringBuilder("\n*********************************************\n");
                 foreach (var e in _elevators)
                 {
-                    sb.AppendLine($"{e.ToString()} '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
+                    sb.AppendLine($"{e.ToString()} at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
                 }
                 sb.AppendLine("*********************************************\n");
                 GeneralHelper.WriteLine($"{sb.ToString()}");
