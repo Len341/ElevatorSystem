@@ -15,7 +15,7 @@ namespace ElevatorSystem.Utils
             {
                 try
                 {
-                    Console.WriteLine(prompt);
+                    GeneralHelper.WriteLine(prompt);
                     _ = int.TryParse(Console.ReadLine() ?? string.Empty, out int res);
                     if (res <= 0)
                     {
@@ -25,7 +25,7 @@ namespace ElevatorSystem.Utils
                 }
                 catch (ArgumentException argEx)
                 {
-                    Console.WriteLine($"An error occurred: {argEx.Message}");
+                    GeneralHelper.WriteLine($"An error occurred: {argEx.Message}");
                     Logger.LogError("Invalid user input for number.");
                     continue;
                 }
@@ -44,8 +44,8 @@ namespace ElevatorSystem.Utils
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An error occurred: {ex.Message}");
-                    Console.WriteLine("Please try again.\n\n");
+                    GeneralHelper.WriteLine($"An error occurred: {ex.Message}");
+                    GeneralHelper.WriteLine("Please try again.\n\n");
                     elevatorCount = GetUserNumberInput("Enter the number of elevators:");
                     elevatorCapacity = GetUserNumberInput("Enter the capacity of each elevator:");
                     Logger.LogError("Failed to create ElevatorSystem with the provided parameters.");
@@ -71,7 +71,7 @@ namespace ElevatorSystem.Utils
                 }
                 catch (ArgumentException ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    GeneralHelper.WriteLine(ex.Message);
                     Logger.LogError("Invalid passenger unload count input.");
                     continue; // Prompt again for valid input
                 }

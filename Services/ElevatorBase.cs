@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ElevatorSystem.Services
 {
-    public class Elevator : IElevator
+    public class ElevatorBase : IElevator
     {
         private readonly Queue<(int, int)> _floorRequests = new();
         public int CurrentFloor { get; private set; }
@@ -19,7 +19,7 @@ namespace ElevatorSystem.Services
 
         public int Id { get; private set; }
 
-        public Elevator(int id, int capacity)
+        public ElevatorBase(int id, int capacity)
         {
             Capacity = capacity;
             Id = id;
@@ -42,7 +42,8 @@ namespace ElevatorSystem.Services
             int passengerCountLoaded = Occupants - _occupants;
             Console.ForegroundColor = ConsoleColor.Green;
             Console.SetCursorPosition(Console.WindowWidth / 2, 3);
-            Console.WriteLine($"Elevator '{Id}' loading '{passengerCountLoaded}' passenger(s) at floor {CurrentFloor}...");
+            GeneralHelper.WriteLine(
+                $"Elevator '{Id}' loading '{passengerCountLoaded}' passenger(s) at floor {CurrentFloor}...");
             Console.SetCursorPosition(0, 0);
             Console.ResetColor();
         }
@@ -91,12 +92,12 @@ namespace ElevatorSystem.Services
                     int passengersToUnload = new Random().Next(1, Occupants + 1);
                     UnloadPassengers(passengersToUnload);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine($"Elevator '{Id}' unloading passengers at floor {CurrentFloor}...");
+                    GeneralHelper.WriteLine($"Elevator '{Id}' unloading passengers at floor {CurrentFloor}...");
                     Console.ResetColor();
                 }
                 else
                 {
-                    Console.WriteLine($"Elevator '{Id}' arrived at floor {CurrentFloor} with no occupants.");
+                    GeneralHelper.WriteLine($"Elevator '{Id}' arrived at floor {CurrentFloor} with no occupants.");
                 }
                 Console.SetCursorPosition(0, 0);
                 LoadPassengers(peopleCount);

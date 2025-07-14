@@ -21,13 +21,13 @@ namespace ElevatorSystem.Services
                 throw new ArgumentException("Elevator capacity must not exceed 20.");
 
             var ids = Enumerable.Range(1, elevatorCount).Select(i => i).ToList();
-            _elevators = ids.Select(id => new Elevator(id, capacity)).Cast<IElevator>().ToList();
+            _elevators = ids.Select(id => new ElevatorBase(id, capacity)).Cast<IElevator>().ToList();
         }
 
-        public Tuple<Elevator?, string> RequestElevator(PersonRequest request)
+        public Tuple<ElevatorBase?, string> RequestElevator(PersonRequest request)
         {
             Console.SetCursorPosition(Console.WindowWidth / 2, 2);
-            Console.WriteLine($"Requesting elevator for {request.PeopleCount} people on floor {request.Floor}.");
+            GeneralHelper.WriteLine($"Requesting elevator for {request.PeopleCount} people on floor {request.Floor}.");
             Console.SetCursorPosition(0, 0);
             StringBuilder sb = new StringBuilder();
             int i = 1;
@@ -58,7 +58,7 @@ namespace ElevatorSystem.Services
                     }
                 }
             }
-            return Tuple.Create((Elevator?)nearestAvailableElevator, sb.ToString());
+            return Tuple.Create((ElevatorBase?)nearestAvailableElevator, sb.ToString());
         }
 
         public async Task<bool> Step()
@@ -78,7 +78,7 @@ namespace ElevatorSystem.Services
             lock (_lock)
             {
                 Console.SetCursorPosition(0, 10);
-                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
                 StringBuilder sb = new StringBuilder("\n*********************************************\n");
                 foreach (var e in _elevators)
                 {
@@ -87,7 +87,7 @@ namespace ElevatorSystem.Services
                 sb.AppendLine("*********************************************\n");
                 var widht = Console.WindowWidth;
 
-                Console.WriteLine($"{sb.ToString()}         ");
+                GeneralHelper.WriteLine($"{sb.ToString()}         ");
                 Console.ResetColor();
             }
         }

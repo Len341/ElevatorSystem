@@ -8,6 +8,17 @@ namespace ElevatorSystem.Utils
 {
     public static class GeneralHelper
     {
+        private static readonly object _lock = new();
+
+        public static void WriteLine(string message)
+        {
+            lock (_lock)
+            {
+                Console.WriteLine(message);
+                Console.ResetColor();
+            }
+        }
+
         public static string ToOrdinal(int number)
         {
             if (number <= 0) return number.ToString();

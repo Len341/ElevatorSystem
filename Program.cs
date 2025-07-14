@@ -3,7 +3,7 @@ using ElevatorSystem.Services;
 using ElevatorSystem.Utils;
 using System.Timers;
 
-Console.WriteLine("Welcome to the Elevator System\n");
+GeneralHelper.WriteLine("Welcome to the Elevator System\n");
 
 int elevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of elevators:");
 int elevatorCapacity = ElevatorHelper.GetUserNumberInput("Enter the capacity of each elevator:");
@@ -38,18 +38,18 @@ while (now < _fiveMinutesFromNow)
     {
         Console.ForegroundColor = ConsoleColor.Red;
         Console.SetCursorPosition(0, Console.WindowHeight - elevatorTuple.Item2.Split("\n").Count() - 1);
-        Console.WriteLine(elevatorTuple.Item2);
+        GeneralHelper.WriteLine(elevatorTuple.Item2);
         Console.ResetColor();
     }
     var nextRequestWaitTime = rand.Next(1000, 2000); // Random wait time between requests
     await Task.Delay(nextRequestWaitTime);
     now = DateTime.Now;
     Console.Clear();
-    Console.WriteLine("Welcome to the Elevator System\n");
-    Console.WriteLine($"Current Time: {now.ToShortTimeString()}");
-    Console.WriteLine($"Elevator Count: {elevatorCount}");
-    Console.WriteLine($"Elevator Capacity: {elevatorCapacity}");
-    Console.WriteLine($"Floor Count: {floorCount}");
+    GeneralHelper.WriteLine("Welcome to the Elevator System\n");
+    GeneralHelper.WriteLine($"Current Time: {now.ToShortTimeString()}");
+    GeneralHelper.WriteLine($"Elevator Count: {elevatorCount}");
+    GeneralHelper.WriteLine($"Elevator Capacity: {elevatorCapacity}");
+    GeneralHelper.WriteLine($"Floor Count: {floorCount}");
 }
 // Wait for all elevator tasks to complete
 await Task.WhenAll(elevatorSystemTasks);
