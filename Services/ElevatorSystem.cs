@@ -12,6 +12,7 @@ namespace ElevatorSystem.Services
     public class ElevatorSystem
     {
         private readonly List<IElevator> _elevators;
+        private static readonly object _lock = new();
         public ElevatorSystem(int elevatorCount, int capacity)
         {
             if (elevatorCount > 100)
@@ -20,51 +21,80 @@ namespace ElevatorSystem.Services
                 throw new ArgumentException("Elevator capacity must not exceed 20.");
 
             var ids = Enumerable.Range(1, elevatorCount).Select(i => i).ToList();
-            _elevators = ids.Select(id => new Elevator(id, capacity)).Cast<IElevator>().ToList();
+            _elevators = ids.Select(id => new ElevatorBase(id, capacity)).Cast<IElevator>().ToList();
+
+            //add two old elevators and one glass elevator
+            _elevators.Add(new OldElevator(101, capacity));
+            _elevators.Add(new OldElevator(102, capacity));
+            _elevators.Add(new GlassElevator(103, capacity));
         }
 
-        public Tuple<Elevator?, string> RequestElevator(PersonRequest request)
+        public Tuple<IElevator?, string> RequestElevator(PersonRequest request)
         {
+            GeneralHelper.WriteLine($"Requesting elevator for {request.PeopleCount} people on floor {request.Floor}.");
             StringBuilder sb = new StringBuilder();
             int i = 1;
             foreach (var elevator in _elevators.OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor)))
             {
-                if (elevator.Occupants + request.PeopleCount > elevator.Capacity)
+                if (elevator.Occupants + request.PeopleCount > elevator.Capacity && elevator.IsAvailable)
                 {
-                    sb.AppendLine($"Elevator '{elevator.Id}' is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}\n");
-                    Logger.LogInfo($"Elevator '{elevator.Id}' is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
+                    sb.AppendLine($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
+                    Logger.LogInfo($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but cannot accommodate the request of {request.PeopleCount} people. Current Occupants: {elevator.Occupants}, Capacity: {elevator.Capacity}");
+                }
+                else if (!elevator.IsAvailable)
+                {
+                    sb.AppendLine($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but is not available.");
+                    Logger.LogInfo($"{elevator.ToString()} is the {GeneralHelper.ToOrdinal(i)} closest but is not available.");
                 }
                 i++;
             }
 
-            var nearestElevatorWithCapacity = _elevators
-                .Where(e => e.Occupants + request.PeopleCount <= e.Capacity)
-                .OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor))
-                .FirstOrDefault();
+            var elevatorsWithCapacityAndAvailability = _elevators
+                .Where(e => e.Occupants + request.PeopleCount <= e.Capacity && e.IsAvailable)
+                .OrderBy(e => Math.Abs(e.CurrentFloor - request.Floor));
 
-            if (nearestElevatorWithCapacity != null)
+            IElevator nearestAvailableElevator = null;
+
+            if (elevatorsWithCapacityAndAvailability != null && elevatorsWithCapacityAndAvailability.Any())
             {
-                nearestElevatorWithCapacity.AddRequest(request.Floor);
+                foreach (var elevator in elevatorsWithCapacityAndAvailability)
+                {
+                    if (elevator.AddRequest(request.Floor, request.PeopleCount))
+                    {
+                        nearestAvailableElevator = elevator;
+                        break;
+                    }
+                }
             }
-            return Tuple.Create((Elevator?)nearestElevatorWithCapacity, sb.ToString());
+            return Tuple.Create(nearestAvailableElevator, sb.ToString());
         }
 
-        public void Step()
+        public async Task<bool> Step()
         {
-            foreach (var elevator in _elevators)
+            var tasks = _elevators.Select(async elevator =>
             {
-                elevator.Move();
-            }
+                bool idle = await Task.Run(() => elevator.Move());
+                return !idle;
+            });
+
+            var results = await Task.WhenAll(tasks);
+            return results.Any(moving => moving);
         }
 
         public void ShowStatus()
         {
-            Console.WriteLine("*********************************************************");
-            foreach (var e in _elevators)
+            lock (_lock)
             {
-                Console.WriteLine($"Elevator '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                StringBuilder sb = new StringBuilder("\n*********************************************\n");
+                foreach (var e in _elevators)
+                {
+                    sb.AppendLine($"{e.ToString()} '{e.Id}' at Floor {e.CurrentFloor}, Direction: {e.Direction}, Occupants: {e.Occupants}/{e.Capacity}");
+                }
+                sb.AppendLine("*********************************************\n");
+                GeneralHelper.WriteLine($"{sb.ToString()}");
+                Console.ResetColor();
             }
-            Console.WriteLine("*********************************************************\n");
         }
     }
 }

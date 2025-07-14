@@ -1,109 +1,64 @@
-﻿using ElevatorSystem.Utils;
-using ElevatorSystem.Models;
+﻿using ElevatorSystem.Models;
+using ElevatorSystem.Services;
+using ElevatorSystem.Utils;
+using System.Timers;
 
+GeneralHelper.WriteLine("Welcome to the Elevator System\n");
 
-int elevatorCount = 0;
-int elevatorCapacity = 0;
-ElevatorSystem.Services.ElevatorSystem system = null;
+int normalElevatorCount = ElevatorHelper.GetUserNumberInput("Enter the number of elevators:");
+int elevatorCapacity = ElevatorHelper.GetUserNumberInput("Enter the capacity of each elevator:");
+int floorCount = ElevatorHelper.GetUserNumberInput("Enter the number of floors in the building:");
 
-Console.WriteLine("Welcome to the Elevator System\n");
-Console.WriteLine("Press ESC to stop the simulation...\n\n");
+ElevatorSystem.Services.ElevatorSystem system =
+    ElevatorHelper.ElevatorSystemSetup(normalElevatorCount, elevatorCapacity);
 
-ElevatorHelper.ElevatorSetupInput(out elevatorCount, out elevatorCapacity);
+List<Task> elevatorSystemTasks = new List<Task>();
 
-system = ElevatorHelper.ElevatorSystemSetup(ref elevatorCount, ref elevatorCapacity);
+System.Timers.Timer _timer = new System.Timers.Timer(3000); // 2 seconds
+_timer.Elapsed += new ElapsedEventHandler((sender, e) => MoveElevators(sender, e, system)); ;
+_timer.Start();
 
-while (true)
+System.Timers.Timer _statusTimer = new System.Timers.Timer(250); // 2 seconds
+_statusTimer.Elapsed += new ElapsedEventHandler((sender, e) => system.ShowStatus()); ;
+_statusTimer.Start();
+
+ConsoleKeyInfo cki;
+var now = DateTime.Now;
+var _fiveMinutesFromNow = now.AddMinutes(5);
+
+while (now < _fiveMinutesFromNow)
 {
-    // allow the user to request an elevator
-    Console.WriteLine("Press 'R' to request an elevator or 'S' to view all the elevators status:\n");
-    var input = Console.ReadKey(true).Key;
-    if (input == ConsoleKey.S)
-    {
-        system.ShowStatus();
-        continue; // Continue to allow further requests
-    }
-    else if (input == ConsoleKey.R)
-    {
-        system.ShowStatus();
-        Console.WriteLine("\nEnter the floor number you are on:");
-        if (int.TryParse(Console.ReadLine(), out int floor) && floor >= 0)
-        {
-            Console.WriteLine("Enter the number of people requesting the elevator:");
-            if (int.TryParse(Console.ReadLine(), out int peopleCount) && peopleCount > 0)
-            {
-                var elevatorTuple = system.RequestElevator(new PersonRequest(floor, peopleCount));
-                var elevator = elevatorTuple.Item1;
-                var result = elevatorTuple.Item2;
-                if (!string.IsNullOrEmpty(result))
-                {
-                    Console.WriteLine(result);
-                }
+    // Simulate a random request
+    Random rand = new Random();
+    int floor = rand.Next(0, floorCount + 5);
+    int peopleCount = rand.Next(1, elevatorCapacity + 5);
 
-                if (elevator == null)
-                {
-                    Console.WriteLine("No elevator can accommodate your request at this time.");
-                    Logger.LogInfo("No elevator available for the request.");
-                }
-                else
-                {
-                    Console.WriteLine($"Elevator {elevator.Id} has been requested to floor {floor} for {peopleCount} people.");
-                    Logger.LogInfo($"Elevator {elevator.Id} requested to floor {floor} for {peopleCount} people.");
-
-                    while (!elevator.Move())
-                    {
-                        // Continue moving the elevator until it reaches its destination
-                        system.ShowStatus();
-                        System.Threading.Thread.Sleep(1000); // Simulate time taken to move
-                    }
-                    elevator.LoadPassengers(peopleCount);
-                    string peopleString = peopleCount > 1 ? "people" : "person";
-                    Console.WriteLine($"Elevator '{elevator.Id}' has loaded {peopleCount} {peopleString}.");
-                    Console.WriteLine($"Please select the destination floor for elevator '{elevator.Id}'");
-                    Logger.LogInfo($"Elevator {elevator.Id} loaded {peopleCount} {peopleString}.");
-                    int targetFloor;
-                    while (true)
-                    {
-                        try
-                        {
-                            targetFloor = Console.ReadLine() switch
-                            {
-                                string s when int.TryParse(s, out int target) && target >= 0 && target != elevator.CurrentFloor => target,
-                                _ => throw new ArgumentException("Please enter a valid floor number. It also cannot be the same as current floor.")
-                            };
-                        }
-                        catch (ArgumentException ex)
-                        {
-                            Console.WriteLine(ex.Message);
-                            Logger.LogError(ex.Message);
-                            continue; // Prompt again for valid input
-                        }
-                        break;
-                    }
-                    elevator.AddRequest(targetFloor);
-                    while (!elevator.Move())
-                    {
-                        // Continue moving the elevator until it reaches its destination
-                        system.ShowStatus();
-                        System.Threading.Thread.Sleep(1000); // Simulate time taken to move
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine("Invalid number of people. Please try again.");
-                Logger.LogError("Invalid number of people requested.");
-            }
-        }
-        else
-        {
-            Console.WriteLine("Invalid floor number. Please try again.");
-            Logger.LogError("Invalid floor number entered.");
-        }
-    }
-    else
+    var elevatorTuple = system.RequestElevator(new PersonRequest(floor, peopleCount));
+    if (elevatorTuple.Item1 == null)
     {
-        Console.WriteLine("Invalid input. Press 'R' to request an elevator.");
-        Logger.LogError("Invalid input received. Expected 'R' or 'S'");
+        Console.ForegroundColor = ConsoleColor.Red;
+        GeneralHelper.WriteLine(elevatorTuple.Item2);
+        Console.ResetColor();
     }
+    var nextRequestWaitTime = rand.Next(1000, 2000); // Random wait time between requests
+    await Task.Delay(nextRequestWaitTime);
+    now = DateTime.Now;
+    Console.Clear();
+    GeneralHelper.WriteLine("Welcome to the Elevator System\n");
+    GeneralHelper.WriteLine($"Current Time: {now.ToShortTimeString()}");
+    GeneralHelper.WriteLine($"Elevator Count: {normalElevatorCount}");
+    GeneralHelper.WriteLine($"Elevator Capacity: {elevatorCapacity}");
+    GeneralHelper.WriteLine($"Floor Count: {floorCount}");
+}
+// Wait for all elevator tasks to complete
+await Task.WhenAll(elevatorSystemTasks);
+_timer.Stop();
+
+
+void MoveElevators(
+    object? sender,
+    ElapsedEventArgs e,
+    ElevatorSystem.Services.ElevatorSystem system)
+{
+    elevatorSystemTasks.Add(system.Step());
 }
